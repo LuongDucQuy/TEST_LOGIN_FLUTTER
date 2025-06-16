@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:test_flutter/database/database_helper.dart';
 import 'package:test_flutter/navigation/routers.dart';
+import 'package:test_flutter/utils/email_service.dart';
 import 'package:test_flutter/utils/validators.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/auth_button.dart';
+import 'package:test_flutter/models/user_model.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -49,9 +52,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     AuthButton(
                       text: 'Gửi liên kết đặt lại',
                       icon: Icons.send,
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_formKey.currentState!.validate()) return;
-                        AuthRouter.goToLogin(context);
+                        final user = await DatabaseHelper.instance
+                            .getUserByEmail(emailController.text.trim());
+                        if (user != null) {
+                          final newPass =
+                              await EmailService.sendResetPasswordEmail(
+                                emailController.text,
+                                user.name!,
+                              );
+                          if (newPass.isNotEmpty) {
+                            final updatedUser = User(password: newPass);
+                            await DatabaseHelper.instance.updateUser(
+                              updatedUser,
+                            );
+                          }
+                          AuthRouter.goToLogin(context);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Email không tồn tại trong hệ thống',
+                              ),
+                            ),
+                          );
+                        }
                       },
                     ),
                     const SizedBox(height: 16),

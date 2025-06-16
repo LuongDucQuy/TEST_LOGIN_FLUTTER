@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:test_flutter/controllers/login_controller.dart';
 import 'package:test_flutter/features/auth/widgets/custom_text_field.dart';
 import 'package:test_flutter/navigation/routers.dart';
 import 'package:test_flutter/utils/validators.dart';
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _loginController = LoginController();
   bool isPasswordVisible = false;
 
   @override
@@ -117,12 +119,22 @@ class _LoginScreenState extends State<LoginScreen> {
               icon: Icons.login,
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  AuthRouter.goToRegister(context);
-                } else {
-                  Text(
-                    'Vui lòng kiểm tra lại thông tin đăng nhập',
-                    style: TextStyle(color: Colors.red),
-                  );
+                  final email = emailController.text.trim();
+                  final password = passwordController.text.trim();
+
+                  _loginController.LoginUser(email, password).then((error) {
+                    if (error == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đăng nhập thành công')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Kiểm tra lại thông tin đăng nhập'),
+                        ),
+                      );
+                    }
+                  });
                 }
               },
             ),

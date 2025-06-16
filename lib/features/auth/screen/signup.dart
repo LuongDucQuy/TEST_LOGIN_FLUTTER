@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:test_flutter/controllers/register_controller.dart';
 import 'package:test_flutter/navigation/routers.dart';
 import 'package:test_flutter/utils/validators.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/auth_button.dart';
 import 'package:intl/intl.dart';
+import 'package:test_flutter/models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,11 +23,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _registerController = RegisterController();
 
   bool isPasswordVisible = false;
   bool isConfirmVisible = false;
   bool isAgreed = false;
   String? gender;
+  DateTime? dob;
 
   @override
   Widget build(BuildContext context) {
@@ -113,31 +117,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
-          controller: dobController,
+          controller: dobController, // ✅ Dùng controller string để hiển thị
           readOnly: true,
           validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Vui lòng chọn ngày sinh';
+            if (dob == null) return 'Vui lòng chọn ngày sinh';
+
+            final today = DateTime.now();
+            final age =
+                today.year -
+                dob!.year -
+                ((today.month < dob!.month) ||
+                        (today.month == dob!.month && today.day < dob!.day)
+                    ? 1
+                    : 0);
+
+            if (age < 18) {
+              return 'Bạn phải từ 18 tuổi trở lên';
             }
-
-            try {
-              final dob = DateFormat('dd/MM/yyyy').parse(value);
-              final today = DateTime.now();
-              final age =
-                  today.year -
-                  dob.year -
-                  (today.month < dob.month ||
-                          (today.month == dob.month && today.day < dob.day)
-                      ? 1
-                      : 0);
-
-              if (age < 18) {
-                return 'Bạn phải từ 18 tuổi trở lên';
-              }
-            } catch (_) {
-              return 'Ngày sinh không hợp lệ';
-            }
-
             return null;
           },
           decoration: InputDecoration(
@@ -145,10 +141,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             prefixIcon: Icon(Icons.cake),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide.none, // No visible border line
+              borderSide: BorderSide.none,
             ),
             filled: true,
-            fillColor: Colors.grey[100], // Light grey background
+            fillColor: Colors.grey[100],
           ),
           onTap: () async {
             FocusScope.of(context).requestFocus(FocusNode());
@@ -156,10 +152,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               context: context,
               firstDate: DateTime(1900),
               lastDate: DateTime.now(),
-              initialDate: DateTime(2000),
+              initialDate: dob ?? DateTime(2000),
             );
             if (picked != null) {
-              dobController.text = DateFormat('dd/MM/yyyy').format(picked);
+              setState(() {
+                dob = picked;
+                dobController.text = DateFormat('dd/MM/yyyy').format(picked);
+              });
             }
           },
         ),
@@ -289,7 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthButton(
       text: 'Đăng ký tài khoản',
       icon: Icons.person_add,
-      onPressed: () {
+      onPressed: () async {
         if (!_formKey.currentState!.validate()) return;
 
         if (!isAgreed) {
@@ -300,7 +299,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
           return;
         }
-        AuthRouter.goToLogin(context);
+
+        final user = User(
+          name: nameController.text,
+          email: emailController.text,
+          phone: phoneController.text,
+          dob: dob,
+          gender: gender,
+          password: passwordController.text,
+        );
+
+        final result = await _registerController.registerUser(user);
+
+        if (result == null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công!')));
+          AuthRouter.goToLogin(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kiểm tra lại thông tin đăng ký')),
+          );
+        }
       },
     );
   }
