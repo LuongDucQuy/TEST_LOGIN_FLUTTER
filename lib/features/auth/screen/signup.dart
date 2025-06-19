@@ -10,7 +10,6 @@ import 'package:test_flutter/models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -30,7 +29,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isAgreed = false;
   String? gender;
   DateTime? dob;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +45,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             flex: 7,
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -82,12 +81,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         validator: Validators.validateName,
         controller: nameController,
         hint: 'Họ và tên',
+
         icon: Icons.person,
       ),
       const SizedBox(height: 16),
     ],
   );
-
   Widget _buildEmailField() => Column(
     children: [
       CustomTextField(
@@ -99,7 +98,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const SizedBox(height: 16),
     ],
   );
-
   Widget _buildPhoneField() => Column(
     children: [
       CustomTextField(
@@ -111,17 +109,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       const SizedBox(height: 16),
     ],
   );
-
   Widget _buildDOBField(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
-          controller: dobController, // ✅ Dùng controller string để hiển thị
+          controller: dobController,
+
           readOnly: true,
           validator: (value) {
             if (dob == null) return 'Vui lòng chọn ngày sinh';
-
             final today = DateTime.now();
             final age =
                 today.year -
@@ -130,7 +127,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         (today.month == dob!.month && today.day < dob!.day)
                     ? 1
                     : 0);
-
             if (age < 18) {
               return 'Bạn phải từ 18 tuổi trở lên';
             }
@@ -193,6 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 'Nam',
                 'Nữ',
               ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+
           onChanged: (value) => setState(() => gender = value),
         ),
         const SizedBox(height: 16),
@@ -257,6 +254,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: const Text.rich(
               TextSpan(
                 text: 'Tôi đồng ý với ',
+
                 style: TextStyle(fontSize: 14),
                 children: [
                   TextSpan(
@@ -290,7 +288,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       icon: Icons.person_add,
       onPressed: () async {
         if (!_formKey.currentState!.validate()) return;
-
         if (!isAgreed) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -299,7 +296,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
           return;
         }
-
         final user = User(
           name: nameController.text,
           email: emailController.text,
@@ -308,13 +304,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           gender: gender,
           password: passwordController.text,
         );
-
         final result = await _registerController.registerUser(user);
-
         if (result == null) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Đăng ký thành công!')));
+
           AuthRouter.goToLogin(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -343,6 +338,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         children: [
           const Text('Đã có tài khoản?', style: TextStyle(color: Colors.grey)),
+
           SizedBox(height: 16),
           SizedBox(
             height: 50,
@@ -378,6 +374,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     phoneController.dispose();
     dobController.dispose();
     passwordController.dispose();
+
     confirmPasswordController.dispose();
     super.dispose();
   }
